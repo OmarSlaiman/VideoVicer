@@ -16,7 +16,7 @@ export default function Readiness({ readiness, onChange, result, metrics, open, 
   return (
     <section className="card" aria-labelledby="readiness-heading">
       <div className="card-head">
-        <h2 id="readiness-heading">The customer's starting point, and what you can do about it</h2>
+        <h2 id="readiness-heading">Kundens udgangspunkt, og hvad I kan gøre ved det</h2>
         <button
           type="button"
           className="btn"
@@ -24,18 +24,18 @@ export default function Readiness({ readiness, onChange, result, metrics, open, 
           aria-controls="readiness-body"
           onClick={() => onToggle(!open)}
         >
-          {open ? 'Hide' : 'Expand'}
+          {open ? 'Skjul' : 'Fold ud'}
         </button>
       </div>
 
       {open ? (
         <div className="card-body" id="readiness-body">
           <p className="chart-caption" style={{ marginTop: 0, marginBottom: 16 }}>
-            Waiting on the customer side is rarely random. It can largely be predicted from five
-            conditions that have nothing to do with the system. The answers below adjust the
-            expectation of how long the flow really takes, and point to a countermeasure for each
-            condition that drags. The questions start in the middle; move them to fit the customer
-            in front of you.
+            Ventetid hos kunden er sjældent tilfældig. Den kan i vid udstrækning forudsiges ud fra
+            fem forhold, der har mere med mennesker og hverdag at gøre end med platformen.
+            Svarene nedenfor justerer forventningen til, hvor længe forløbet reelt tager, og
+            peger på et modtræk for hvert forhold, der trækker ned. Spørgsmålene starter på midten;
+            ret dem, så de passer til den kunde, I har foran jer.
           </p>
 
           <div className="questions">
@@ -63,13 +63,13 @@ export default function Readiness({ readiness, onChange, result, metrics, open, 
 
           <div className="score-line">
             <span>
-              Total score: <b>{score} of 10</b>
+              Samlet score: <b>{score} af 10</b>
             </span>
             <span>
-              Assessment: <b>{band.label.toLowerCase()}</b>
+              Vurdering: <b>{band.label.toLowerCase()}</b>
             </span>
             <span>
-              Customer-side waiting multiplied by <b>{fmt(multiplier, 1)}</b>
+              Kundens ventetid ganges med <b>{fmt(multiplier, 1)}</b>
             </span>
           </div>
 
@@ -77,23 +77,23 @@ export default function Readiness({ readiness, onChange, result, metrics, open, 
             <div className="compare-cell">
               <div className="compare-value">
                 {hasData ? fmt(planned, 1) : '—'}
-                <span className="suffix">days</span>
+                <span className="suffix">dage</span>
               </div>
-              <div className="compare-label">Planned lead time</div>
+              <div className="compare-label">Planlagt gennemløbstid</div>
             </div>
             <div className="compare-cell highlight">
               <div className="compare-value">
                 {hasData ? fmtEstimateRange(low, high) : '—'}
-                <span className="suffix">days</span>
+                <span className="suffix">dage</span>
               </div>
-              <div className="compare-label">Realistic estimate</div>
+              <div className="compare-label">Realistisk skøn</div>
             </div>
             <div className="compare-cell">
               <div className={'compare-value delta' + (deltaDays < 0 ? ' negative' : '')}>
                 {hasData ? (deltaDays >= 0 ? '+' : '−') + fmtEstimate(Math.abs(deltaDays)) : '—'}
-                <span className="suffix">days</span>
+                <span className="suffix">dage</span>
               </div>
-              <div className="compare-label">Difference</div>
+              <div className="compare-label">Forskel</div>
             </div>
           </div>
 
@@ -101,15 +101,15 @@ export default function Readiness({ readiness, onChange, result, metrics, open, 
             <p className="readiness-summary">
               {noCustomerWait ? (
                 <>
-                  No waiting is recorded on the customer side, so the answers here do not move the
-                  figure. That is worth checking: in most flows a substantial share of the waiting
-                  sits with the customer.
+                  Der er ikke registreret ventetid hos kunden, så svarene her flytter ikke tallet.
+                  Det er værd at kontrollere: i de fleste forløb ligger en betydelig del af
+                  ventetiden netop hos kunden.
                 </>
               ) : (
                 <>
-                  With this customer's starting point you should expect around{' '}
-                  <b>{fmtEstimateRange(low, high)} days</b> rather than the {fmt(planned, 1)} the
-                  plan assumes. The difference lies almost entirely in customer-side waiting.
+                  Med denne kundes udgangspunkt bør I forvente omkring{' '}
+                  <b>{fmtEstimateRange(low, high)} dage</b> frem for de {fmt(planned, 1)}, planen
+                  antager. Forskellen ligger næsten udelukkende i kundens ventetid.
                 </>
               )}
             </p>
@@ -117,9 +117,10 @@ export default function Readiness({ readiness, onChange, result, metrics, open, 
 
           {actions.length > 0 ? (
             <div className="section">
-              <h3 className="sub-heading">Countermeasures</h3>
+              <h3 className="sub-heading">Modtræk</h3>
               <p className="note-line">
-                One for each condition that drags. None of them requires anyone to work faster.
+                Ét for hvert forhold, der trækker ned. Ingen af dem kræver, at nogen arbejder
+                hurtigere.
               </p>
               <ul className="action-list">
                 {actions.map((a) => (
@@ -135,29 +136,29 @@ export default function Readiness({ readiness, onChange, result, metrics, open, 
             </div>
           ) : (
             <p className="readiness-summary">
-              The customer scores as well as possible on all five conditions. That is rare, and it
-              is worth noticing why — it is often something that can be repeated with the next one.
+              Kunden scorer bedst muligt på alle fem forhold. Det er sjældent, og det er værd at
+              lægge mærke til hvorfor — det er ofte noget, der kan gentages hos den næste.
             </p>
           )}
 
           <p className="disclaimer">
-            Only customer-side waiting is multiplied. The customer's data quality or decision path
-            does not affect how fast your own team works — it affects how long the task sits waiting
-            at the customer. That is a point about cause, not a technicality.
+            Kun kundens ventetid ganges. Kundens medarbejderliste eller arbejdstilrettelæggelse
+            påvirker ikke, hvor hurtigt VideoVicers eget team arbejder — den påvirker, hvor længe
+            opgaven ligger og venter hos kunden. Det er en pointe om årsag, ikke en teknikalitet.
           </p>
           <p className="disclaimer">
-            These figures are an estimate, not a prediction. The multiplier is a rule of thumb based
-            on patterns of experience, not a calibrated model. That is why the estimate is shown as
-            a range and without decimals. Use it to open the conversation about expectations, not to
-            promise a date.
+            Tallene er et skøn, ikke en forudsigelse. Multiplikatoren er en tommelfingerregel
+            bygget på erfaringsmønstre, ikke en kalibreret model. Derfor vises skønnet som et
+            interval og uden decimaler. Brug det til at åbne samtalen om forventninger, ikke til at
+            love en dato.
           </p>
         </div>
       ) : (
         <div className="card-body">
           <p className="chart-caption" style={{ margin: 0 }}>
-            Five questions about the customer give a realistic estimate alongside the planned one,
-            and a countermeasure for each condition that drags. Adoption is behaviour, and behaviour
-            is the most common source of waiting.
+            Fem spørgsmål om kunden giver et realistisk skøn ved siden af det planlagte, og et
+            modtræk for hvert forhold, der trækker ned. Adfærd er den hyppigste kilde til
+            ventetid, og her er adfærden medarbejdernes, ikke ledelsens.
           </p>
         </div>
       )}

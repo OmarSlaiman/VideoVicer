@@ -1,38 +1,11 @@
 // Persistence and sharing. Both are conveniences: if they fail, the app carries on.
 
-import { CAUSE_BY_KEY, OWNER_KEYS, isBlank } from './model.js'
+import { CAUSE_BY_KEY, OWNER_KEYS, cleanReadiness, isBlank } from './model.js'
 
-const STORAGE_KEY = 'onboarding-flow-analyser/v1'
-
-// The tool shipped in Danish first, and links made then are still in circulation.
-// Translating the keys on the way in costs a few lines and keeps those links alive.
-const LEGACY_OWNERS = { os: 'us', kunde: 'customer', tredjepart: 'thirdParty' }
-const LEGACY_CAUSES = {
-  kalender: 'calendar',
-  beslutning: 'decision',
-  leverance: 'delivery',
-  prioritering: 'priority',
-  teknisk: 'technical',
-}
-
-// The Danish example as it was saved. A visitor who only ever looked at the demo
-// has exactly this in storage; replacing it keeps them from meeting an English
-// page with Danish step names. Anything edited is the user's own work and stays.
-const DANISH_EXAMPLE_NAMES = [
-  'Kickoff-møde og forventningsafstemning',
-  'Kunden leverer kontoplan og systemadgange',
-  'Opsætning af integration',
-  'Datavalidering og fejlsøgning',
-  'Kunden godkender kontoplansmapping',
-  'Første automatiske afstemning kører',
-  'Træning af kundens team',
-  'Go-live og overdragelse til drift',
-]
-
-export function isUntouchedDanishExample(steps) {
-  if (!steps || steps.length !== DANISH_EXAMPLE_NAMES.length) return false
-  return steps.every((s, i) => s.name === DANISH_EXAMPLE_NAMES[i])
-}
+// GitHub Pages serves every project of an account from the same origin, so every
+// page shares one localStorage. This key is unique to this tool, so work saved by
+// another tool on the same origin is never loaded here - and vice versa.
+const STORAGE_KEY = 'videovicer-onboarding-analyse/v1'
 
 function encodeUtf8ToBase64(str) {
   const bytes = new TextEncoder().encode(str)
@@ -64,32 +37,23 @@ function pack(state) {
   }
 }
 
-function readOwner(raw) {
-  if (OWNER_KEYS.includes(raw)) return raw
-  return LEGACY_OWNERS[raw] ?? 'us'
-}
-
-function readCause(raw) {
-  if (CAUSE_BY_KEY[raw]) return raw
-  return LEGACY_CAUSES[raw] ?? null
-}
-
-// Older links and saved work carry only five fields per step and no adoption
-// figure. They still load, but the cause stays unspecified rather than guessed.
+// Anything unrecognised is reset to a safe value rather than trusted: an unknown
+// owner becomes VideoVicer, an unknown cause stays unspecified, and readiness
+// answers that do not fit the questions fall back to the middle answer.
 function unpack(raw) {
   if (!raw || !Array.isArray(raw.s)) return null
   const steps = raw.s.map((row, i) => ({
     id: `u${i}`,
     name: String(row[0] ?? ''),
-    owner: readOwner(row[1]),
+    owner: OWNER_KEYS.includes(row[1]) ? row[1] : 'us',
     processHours: Number(row[2]) || 0,
     waitDaysBefore: Number(row[3]) || 0,
     isValueMoment: !!row[4],
-    waitCause: readCause(row[5]),
+    waitCause: CAUSE_BY_KEY[row[5]] ? row[5] : null,
   }))
   return {
     steps,
-    readiness: raw.r ?? null,
+    readiness: cleanReadiness(raw.r),
     adoptionDays: raw.a === null || raw.a === undefined ? null : Number(raw.a) || 0,
   }
 }

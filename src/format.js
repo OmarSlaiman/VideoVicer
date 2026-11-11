@@ -1,6 +1,7 @@
 // Number formatting in one place, so the figures look the same everywhere.
+// Danish: comma as the decimal mark, full stop for thousands.
 
-const LOCALE = 'en-GB'
+const LOCALE = 'da-DK'
 
 export function fmt(n, decimals = 1) {
   if (n === null || n === undefined || !Number.isFinite(n)) return '—'
@@ -25,9 +26,14 @@ export function fmtPct(n, decimals = 0) {
   return fmt(n, decimals)
 }
 
-// "5 days" / "1 day", with the singular right
+// "5 dage" / "1 dag", with the singular right
 export function dayWord(n) {
-  return Math.abs(n - 1) < 0.05 ? 'day' : 'days'
+  return Math.abs(n - 1) < 0.05 ? 'dag' : 'dage'
+}
+
+// "1 time" / "2 timer"
+export function hourWord(n) {
+  return Math.abs(n - 1) < 0.05 ? 'time' : 'timer'
 }
 
 // The rounding rule: calculated figures may carry one decimal, estimates may not.

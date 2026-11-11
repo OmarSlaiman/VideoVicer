@@ -22,7 +22,7 @@ function StackedBar({ segments, total, ariaLabel }) {
             style={{ width: share + '%', background: seg.color }}
             title={seg.label + ': ' + fmt(seg.days, 1) + ' ' + dayWord(seg.days)}
           >
-            {share >= 9 ? fmtPct(share) + '%' : ''}
+            {share >= 9 ? fmtPct(share) + ' %' : ''}
           </div>
         )
       })}
@@ -70,26 +70,26 @@ export default function WaitDistribution({ metrics, improvement, startHere }) {
   return (
     <section className="card" aria-labelledby="wait-heading">
       <div className="card-head">
-        <h2 id="wait-heading">Where the waiting sits, and why</h2>
-        <p className="note">First who waited, then what they were waiting on</p>
+        <h2 id="wait-heading">Hvor ligger ventetiden, og hvorfor</h2>
+        <p className="note">Først hvem der ventede, så hvad de ventede på</p>
       </div>
       <div className="card-body">
         {!hasWait ? (
           <p className="hint">
-            No waiting has been recorded yet. That is rarely the whole picture: waiting is the part
-            of a flow that is easiest to forget, because nobody spends time on it.
+            Der er ikke registreret nogen ventetid endnu. Det er sjældent hele billedet: ventetid
+            er den del af et forløb, der er nemmest at glemme, fordi ingen bruger tid på den.
           </p>
         ) : (
           <>
-            <h3 className="sub-heading">By owner</h3>
+            <h3 className="sub-heading">Efter ejer</h3>
             <StackedBar
               segments={ownerSegments}
               total={totalWaitDays}
               ariaLabel={
-                'Distribution of waiting by owner: ' +
+                'Fordeling af ventetid efter ejer: ' +
                 ownerSegments
                   .filter((s) => s.days > 0)
-                  .map((s) => s.label + ' ' + fmtPct((s.days / totalWaitDays) * 100) + ' percent')
+                  .map((s) => s.label + ' ' + fmtPct((s.days / totalWaitDays) * 100) + ' procent')
                   .join(', ')
               }
             />
@@ -103,16 +103,16 @@ export default function WaitDistribution({ metrics, improvement, startHere }) {
             </div>
 
             <h3 className="sub-heading" style={{ marginTop: 24 }}>
-              By cause
+              Efter årsag
             </h3>
             <StackedBar
               segments={causeSegments}
               total={totalWaitDays}
               ariaLabel={
-                'Distribution of waiting by cause: ' +
+                'Fordeling af ventetid efter årsag: ' +
                 causeSegments
                   .filter((s) => s.days > 0)
-                  .map((s) => s.label + ' ' + fmtPct((s.days / totalWaitDays) * 100) + ' percent')
+                  .map((s) => s.label + ' ' + fmtPct((s.days / totalWaitDays) * 100) + ' procent')
                   .join(', ')
               }
             />
@@ -131,22 +131,21 @@ export default function WaitDistribution({ metrics, improvement, startHere }) {
             </div>
             {humanWaitShare !== null ? (
               <p className="chart-caption">
-                The blue fields are human causes, the grey one is technical.{' '}
-                {fmt(humanWaitShare, 1)}% of the classified waiting comes down to people. That is
-                not incompetence, it is organisation — and organisation is something you can change.
+                De blå felter er menneskelige årsager, det grå er teknisk.{' '}
+                {fmt(humanWaitShare, 1)} % af den klassificerede ventetid skyldes mennesker. Det er
+                ikke inkompetence, det er organisering — og organisering kan man lave om på.
                 {unspecifiedWaitDays > 0 ? (
                   <>
                     {' '}
-                    The hatched field is waiting without a cause: {fmt(unspecifiedWaitDays, 1)}{' '}
-                    {dayWord(unspecifiedWaitDays)}, counted in neither column.
+                    Det stribede felt er ventetid uden en årsag: {fmt(unspecifiedWaitDays, 1)}{' '}
+                    {dayWord(unspecifiedWaitDays)}, som ikke tælles med nogen af stederne.
                   </>
                 ) : null}
               </p>
             ) : (
               <p className="chart-caption">
-                None of the steps has a cause set yet, so the split cannot be made. Set the{' '}
-                <b>because</b> field on the steps that have waiting — the tool does not guess it for
-                you.
+                Ingen af trinene har en årsag sat endnu, så opdelingen kan ikke laves. Sæt feltet{' '}
+                <b>fordi</b> på trinene med ventetid — værktøjet gætter det ikke for dig.
               </p>
             )}
           </>
@@ -154,10 +153,9 @@ export default function WaitDistribution({ metrics, improvement, startHere }) {
 
         {topWaits.length > 0 ? (
           <div className="section">
-            <h3 className="sub-heading">The biggest delays, and what to do about them</h3>
+            <h3 className="sub-heading">De største forsinkelser, og hvad man gør ved dem</h3>
             <p className="note-line">
-              The three longest stretches of standing still. The countermeasure follows from the
-              cause, not from who was waiting.
+              De tre længste stilstande. Modtrækket følger af årsagen, ikke af hvem der ventede.
             </p>
             <ul className="waste-list">
               {topWaits.map((w, i) => {
@@ -167,27 +165,26 @@ export default function WaitDistribution({ metrics, improvement, startHere }) {
                     <span className="waste-rank">{i + 1}</span>
                     <div className="waste-body">
                       <div className="waste-name">
-                        Before step {w.index + 1}: {w.name || 'unnamed step'}
+                        Før trin {w.index + 1}: {w.name || 'trin uden navn'}
                       </div>
                       <div className="waste-meta">
-                        {fmtPct(w.shareOfTotal)}% of the whole flow · owner:{' '}
-                        {OWNER_LABEL[w.owner].toLowerCase()} · cause:{' '}
-                        {cause ? cause.label.toLowerCase() : 'not set'}
+                        {fmtPct(w.shareOfTotal)} % af hele forløbet · ejer: {OWNER_LABEL[w.owner]} ·
+                        årsag: {cause ? cause.label.toLowerCase() : 'ikke sat'}
                       </div>
                       {/* Without a cause there is no countermeasure. Borrowing one from
                           another cause would be a guess dressed up as advice. */}
                       {cause ? (
                         <div className="waste-action">
-                          <b>Countermeasure</b> {cause.countermeasure}
+                          <b>Modtræk</b> {cause.countermeasure}
                           <span className="waste-saving">
-                            Typically shortens it by {cause.saving[0]}–{cause.saving[1]}%
+                            Forkorter typisk ventetiden med {cause.saving[0]}–{cause.saving[1]} %
                           </span>
                         </div>
                       ) : (
                         <div className="waste-action needs-answer">
-                          <b>Countermeasure missing</b> Set the <b>because</b> field on step{' '}
-                          {w.index + 1}. The countermeasure follows from the cause, so without it
-                          the tool cannot say what to do — and it does not guess.
+                          <b>Modtræk mangler</b> Sæt feltet <b>fordi</b> på trin {w.index + 1}.
+                          Modtrækket følger af årsagen, så uden den kan værktøjet ikke sige, hvad
+                          man gør — og det gætter ikke.
                         </div>
                       )}
                     </div>
@@ -201,35 +198,33 @@ export default function WaitDistribution({ metrics, improvement, startHere }) {
 
             {improvement ? (
               <div className="potential">
-                <h4>If those three are handled</h4>
+                <h4>Hvis de tre poster håndteres</h4>
                 <p>
-                  The flow lands at roughly{' '}
-                  <b>{fmtEstimateRange(improvement.leadLow, improvement.leadHigh)} days</b> instead
-                  of {fmt(totalLeadTimeDays, 1)}. Flow efficiency rises to roughly{' '}
-                  <b>{fmtEstimateRange(improvement.flowLow, improvement.flowHigh)}%</b>.
+                  Forløbet lander på cirka{' '}
+                  <b>{fmtEstimateRange(improvement.leadLow, improvement.leadHigh)} dage</b> frem for{' '}
+                  {fmt(totalLeadTimeDays, 1)}. Flow-effektiviteten stiger til cirka{' '}
+                  <b>{fmtEstimateRange(improvement.flowLow, improvement.flowHigh)} %</b>.
                 </p>
                 <p className="disclaimer" style={{ marginTop: 10 }}>
-                  The estimate rests on rules of thumb for each type of cause, not on your data.
-                  Treat it as a direction, not a promise.
+                  Skønnet bygger på tommelfingerregler for hver årsagstype, ikke på jeres data.
+                  Betragt det som en retning, ikke et løfte.
                   {improvement.skippedDays > 0 ? (
                     <>
                       {' '}
-                      {fmt(improvement.skippedDays, 1)} {dayWord(improvement.skippedDays)} are left
-                      out, because the steps they belong to have no cause set.
+                      {fmt(improvement.skippedDays, 1)} {dayWord(improvement.skippedDays)} er holdt
+                      udenfor, fordi de tilhørende trin ikke har en årsag sat.
                     </>
                   ) : null}
                 </p>
 
                 {startHere ? (
                   <p className="start-here">
-                    <b>Start with the {startHere.cause.label.toLowerCase()} wait.</b> It accounts for{' '}
+                    <b>Start med {startHere.cause.waitName}.</b> Den fylder{' '}
                     {fmt(startHere.days, startHere.days % 1 === 0 ? 0 : 1)}{' '}
-                    {dayWord(startHere.days)} in the flow
-                    {startHere.clearlyLargest && startHere.causeCount > 1
-                      ? ', more than any other cause'
-                      : ''}
-                    , and {startHere.cause.effortNote}. Those are the{' '}
-                    {fmtEstimate(startHere.expectedSaving)} days that are easiest to claim first.
+                    {dayWord(startHere.days)} i forløbet
+                    {startHere.hasMostDays ? ', mere end nogen anden årsag' : ''}, og{' '}
+                    {startHere.cause.effortNote}. Det er de cirka{' '}
+                    {fmtEstimate(startHere.expectedSaving)} dage, der er lettest at hente først.
                   </p>
                 ) : null}
               </div>

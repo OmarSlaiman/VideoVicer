@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { OWNER_KEYS, OWNER_LABEL, buildBlocks, causeOrUnspecified } from '../model.js'
-import { fmt, dayWord } from '../format.js'
+import { fmt, dayWord, hourWord } from '../format.js'
 
-const PAD_LEFT_LANES = 92
+const PAD_LEFT_LANES = 100
 const PAD_LEFT_FLAT = 12
 const PAD_RIGHT = 18
 const TOP = 40
@@ -15,11 +15,13 @@ const WAIT_FILL = '#DDE1E9'
 const WAIT_STROKE = '#C9CFDB'
 const LANE_FILL = '#F7F8FA'
 const LANE_STROKE = '#E6E9F0'
+const ZONE_FILL = '#E8ECF4'
 const AXIS_COLOR = '#B9BFCC'
 const MUTED = '#6B7280'
 const NAVY = '#1F3864'
 
 const FALLBACK_WIDTH = 880
+const ZONE_LABEL = 'Fra adgang til gennemført kursus'
 
 // A callback ref rather than useEffect: the timeline disappears entirely when there
 // are no steps, and an effect with an empty dependency list would never measure again
@@ -76,9 +78,15 @@ export default function Timeline({ steps, metrics, svgRef, adoptionDays = null }
 
   const blocks = buildBlocks(steps)
   const total = metrics.totalLeadTimeDays
-  // The adoption period sits after go-live, but belongs on the same axis.
+  const ttv = metrics.ttvDays
+
+  // The gap is counted from the first value moment - the first certificate - until
+  // most of the employees have finished. Without a value moment there is nothing to
+  // count from, so the zone falls back to starting where the flow ends.
   const adoption = Number.isFinite(adoptionDays) && adoptionDays > 0 ? adoptionDays : 0
-  const span = total + adoption
+  const zoneStart = ttv !== null ? ttv : total
+  const zoneEnd = zoneStart + adoption
+  const span = Math.max(total, zoneEnd)
 
   const laneKeys = OWNER_KEYS.filter((o) => steps.some((s) => s.owner === o))
   const useLanes = showLanes && laneKeys.length > 0
@@ -100,12 +108,12 @@ export default function Timeline({ steps, metrics, svgRef, adoptionDays = null }
     return (
       <section className="card" aria-labelledby="timeline-heading">
         <div className="card-head">
-          <h2 id="timeline-heading">Timeline</h2>
+          <h2 id="timeline-heading">Tidslinje</h2>
         </div>
         <div className="card-body">
           <p className="hint">
-            The timeline is drawn as soon as there are steps with time in them. The width follows
-            calendar time, so work and waiting can be compared directly.
+            Tidslinjen tegnes, så snart der er trin med tid i. Bredden følger kalendertiden, så
+            arbejde og ventetid kan sammenlignes direkte.
           </p>
         </div>
       </section>
@@ -138,17 +146,21 @@ export default function Timeline({ steps, metrics, svgRef, adoptionDays = null }
     }
   }
 
-  const ttv = metrics.ttvDays
   const ttvX = ttv !== null ? x(ttv) : null
-  const flagAnchor = ttvX !== null && ttvX > width - 170 ? 'end' : 'start'
+  const flagAnchor = ttvX !== null && ttvX > width - 190 ? 'end' : 'start'
+
+  // The label goes in the part of the zone that lies beyond the last block, so it never
+  // lands on top of a step. If that part is too narrow, the legend carries the name.
+  const zoneLabelFrom = Math.max(x(zoneStart), x(total))
+  const zoneLabelRoom = x(zoneEnd) - zoneLabelFrom
 
   return (
     <section className="card" aria-labelledby="timeline-heading">
       <div className="card-head">
-        <h2 id="timeline-heading">Timeline</h2>
+        <h2 id="timeline-heading">Tidslinje</h2>
         <label className="note" style={{ display: 'inline-flex', gap: 6, alignItems: 'center', cursor: 'pointer' }}>
           <input type="checkbox" checked={showLanes} onChange={(e) => setShowLanes(e.target.checked)} />
-          Show lanes by owner
+          Vis baner pr. ejer
         </label>
       </div>
       <div className="card-body">
@@ -162,13 +174,13 @@ export default function Timeline({ steps, metrics, svgRef, adoptionDays = null }
             fontFamily="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Arial, sans-serif"
             role="img"
             aria-label={
-              'Timeline of the flow. ' +
+              'Tidslinje over forløbet. ' +
               fmt(metrics.totalLeadTimeDays, 1) +
-              ' days of lead time, of which ' +
+              ' dages gennemløbstid, hvoraf ' +
               fmt(metrics.totalProcessDays, 1) +
-              ' days are work and ' +
+              ' dage er arbejde og ' +
               fmt(metrics.totalWaitDays, 1) +
-              ' days are waiting.'
+              ' dage er ventetid.'
             }
           >
             <rect x="0" y="0" width={width} height={height} fill="#FFFFFF" />
@@ -198,9 +210,47 @@ export default function Timeline({ steps, metrics, svgRef, adoptionDays = null }
               </g>
             ))}
 
+            {/* The zone is drawn behind the blocks, so it can start at the first value
+                moment without covering the steps that run alongside it. */}
+            {adoption > 0 ? (
+              <g>
+                <title>
+                  {ZONE_LABEL +
+                    ' · ' +
+                    fmt(adoption, adoption % 1 === 0 ? 0 : 1) +
+                    ' ' +
+                    dayWord(adoption) +
+                    ' fra første certifikat, til hovedparten af medarbejderne er færdige'}
+                </title>
+                <rect
+                  x={x(zoneStart)}
+                  y={TOP - 4}
+                  width={Math.max(x(zoneEnd) - x(zoneStart), 2)}
+                  height={lanesBottom - TOP + 8}
+                  fill={ZONE_FILL}
+                  stroke={NAVY}
+                  strokeWidth="1"
+                  strokeDasharray="5 4"
+                  rx="3"
+                />
+                {zoneLabelRoom > 230 ? (
+                  <text
+                    x={zoneLabelFrom + zoneLabelRoom / 2}
+                    y={TOP + (lanesBottom - TOP) / 2 + 4}
+                    textAnchor="middle"
+                    fontSize="12"
+                    fill={NAVY}
+                    fontWeight="600"
+                  >
+                    {ZONE_LABEL}
+                  </text>
+                ) : null}
+              </g>
+            ) : null}
+
             {handoffMarks.map((h, i) => (
               <g key={'h' + i}>
-                <title>{'Handoff: ' + h.label}</title>
+                <title>{'Overlevering: ' + h.label}</title>
                 <line
                   x1={h.x}
                   y1={h.from}
@@ -234,8 +284,14 @@ export default function Timeline({ steps, metrics, svgRef, adoptionDays = null }
                   : ''
               const centered = isWork && bw < 64
               const tip = isWork
-                ? b.name + ' · ' + fmt(b.hours, 1) + ' hours of work · ' + OWNER_LABEL[b.owner]
-                : 'Waiting before "' +
+                ? b.name +
+                  ' · ' +
+                  fmt(b.hours, 1) +
+                  ' ' +
+                  hourWord(b.hours) +
+                  ' arbejde · ' +
+                  OWNER_LABEL[b.owner]
+                : 'Ventetid før "' +
                   b.name +
                   '" · ' +
                   fmt(b.days, 1) +
@@ -243,7 +299,7 @@ export default function Timeline({ steps, metrics, svgRef, adoptionDays = null }
                   dayWord(b.days) +
                   ' · ' +
                   OWNER_LABEL[b.owner] +
-                  ' · cause: ' +
+                  ' · årsag: ' +
                   causeOrUnspecified(b.cause).label.toLowerCase()
               return (
                 <g key={i}>
@@ -272,42 +328,6 @@ export default function Timeline({ steps, metrics, svgRef, adoptionDays = null }
               )
             })}
 
-            {adoption > 0 ? (
-              <g>
-                <title>
-                  {'Adoption period · ' +
-                    fmt(adoption, adoption % 1 === 0 ? 0 : 1) +
-                    ' ' +
-                    dayWord(adoption) +
-                    ' from go-live until the solution is used day to day'}
-                </title>
-                <rect
-                  x={x(total)}
-                  y={TOP}
-                  width={Math.max(x(span) - x(total), 2)}
-                  height={lanesBottom - TOP}
-                  fill="#F2F4F8"
-                  stroke={NAVY}
-                  strokeWidth="1"
-                  strokeDasharray="5 4"
-                  opacity="0.85"
-                  rx="3"
-                />
-                {x(span) - x(total) > 120 ? (
-                  <text
-                    x={(x(total) + x(span)) / 2}
-                    y={TOP + (lanesBottom - TOP) / 2 + 4}
-                    textAnchor="middle"
-                    fontSize="12"
-                    fill={NAVY}
-                    fontWeight="600"
-                  >
-                    Adoption period
-                  </text>
-                ) : null}
-              </g>
-            ) : null}
-
             {ttvX !== null ? (
               <g>
                 <line
@@ -328,7 +348,7 @@ export default function Timeline({ steps, metrics, svgRef, adoptionDays = null }
                   fill={NAVY}
                   fontWeight="600"
                 >
-                  {'First value · ' + fmt(ttv, 1) + ' ' + dayWord(ttv)}
+                  {'Første værdi · ' + fmt(ttv, 1) + ' ' + dayWord(ttv)}
                 </text>
               </g>
             ) : null}
@@ -355,32 +375,31 @@ export default function Timeline({ steps, metrics, svgRef, adoptionDays = null }
               </g>
             ))}
             <text x={padLeft + chartW} y={lanesBottom + 30} textAnchor="end" fontSize="11" fill={MUTED}>
-              calendar days
+              kalenderdage
             </text>
           </svg>
         </div>
 
         <div className="legend">
           <span>
-            <i className="swatch" style={{ background: WORK_FILL }} /> Work
+            <i className="swatch" style={{ background: WORK_FILL }} /> Arbejde
           </span>
           <span>
-            <i className="swatch" style={{ background: WAIT_FILL, borderColor: WAIT_STROKE }} /> Waiting
+            <i className="swatch" style={{ background: WAIT_FILL, borderColor: WAIT_STROKE }} /> Ventetid
           </span>
-          {useLanes ? <span>Dashed vertical line: a handoff</span> : null}
+          {useLanes ? <span>Stiplet lodret linje: overlevering</span> : null}
           {adoption > 0 ? (
             <span>
-              <i className="swatch" style={{ background: '#F2F4F8', borderColor: NAVY, borderStyle: 'dashed' }} />{' '}
-              Adoption period
+              <i className="swatch" style={{ background: ZONE_FILL, borderColor: NAVY, borderStyle: 'dashed' }} />{' '}
+              {ZONE_LABEL}
             </span>
           ) : null}
-          <span>Hover a block for detail</span>
+          <span className="hover-hint">Hold musen over en blok for detaljer</span>
         </div>
 
         <p className="chart-caption">
-          The width follows calendar time. The dark blocks are the time someone is actually
-          working; the light ones are the time the task sits still. The ratio between them is the
-          flow efficiency.
+          Bredden følger kalendertiden. De mørke blokke er den tid, nogen faktisk arbejder; de
+          lyse er den tid, opgaven ligger stille. Forholdet mellem dem er flow-effektiviteten.
         </p>
       </div>
     </section>

@@ -1,15 +1,15 @@
-# Onboarding Flow Analyser
+# Kundeonboarding hos VideoVicer
 
-A small, self-contained web tool that maps a customer onboarding flow and translates it into two
-vocabularies at once: process work (process time, lead time, flow efficiency, handoffs) and
-SaaS/GTM (time-to-value).
+Et analyseudkast over VideoVicers kundeonboarding, lavet af Omar Slaiman i forbindelse med en
+ansøgning som Customer Success Manager. Siden stiller ét spørgsmål: **Hvor går tiden fra
+underskrift til første certifikat?**
 
-The claim it is built to make concrete: customer onboarding is a process like any other, and
-time-to-value is lead time under another name.
+Forløbet bygger på offentlig information og mine egne antagelser, så alle tal er gæt. Siden er lavet
+til at blive rettet: ændrer man et trin, regner den hele analysen om.
 
-Live at <https://omarslaiman.github.io/Repodo/>.
+Live: <https://omarslaiman.github.io/VideoVicer/>
 
-## Getting started
+## Kom i gang
 
 ```bash
 npm install
@@ -23,113 +23,134 @@ npm run dev
 npm run build
 ```
 
-The build lands in `dist/` and can be hosted as static files anywhere. `base` is set to `./`, so it
-also works from a subdirectory.
+Bygget lander i `dist/` og kan lægges op som statiske filer hvor som helst. `base` er sat til `./`,
+så det også virker fra en undermappe.
 
-## How it is put together
+## Sådan er det sat sammen
 
-| File | Responsibility |
+| Fil | Ansvar |
 | --- | --- |
-| `src/model.js` | Data model, constants, the example and every calculation. No UI. |
-| `src/format.js` | Number formatting and the rounding rule, in one place. |
-| `src/persist.js` | localStorage, sharing via base64 in the URL hash, and legacy migration. |
-| `src/exportImage.js` | Download the timeline as SVG or PNG. |
-| `src/App.jsx` | State, the order of the sections, sharing and export. |
-| `src/components/StepList.jsx` | The editable list of steps. |
-| `src/components/Metrics.jsx` | The five key figures and the arithmetic behind them. |
-| `src/components/Timeline.jsx` | The timeline as hand-drawn SVG, with swimlanes. |
-| `src/components/WaitDistribution.jsx` | Waiting by owner and by cause, the biggest delays, countermeasures and potential. |
-| `src/components/Readiness.jsx` | The five readiness questions, the realistic estimate and the countermeasures. |
-| `src/components/AdoptionGap.jsx` | The gap between value available and value used. |
+| `src/model.js` | Datamodel, konstanter, eksemplet og alle beregninger. Ingen UI. |
+| `src/format.js` | Danske talformater og afrundingsreglen, samlet ét sted. |
+| `src/persist.js` | localStorage og deling via base64 i URL'ens hash. |
+| `src/exportImage.js` | Hent tidslinjen som SVG eller PNG. |
+| `src/App.jsx` | State, rækkefølgen af sektioner, deling og eksport. |
+| `src/components/StepList.jsx` | Den redigerbare trinliste. |
+| `src/components/Metrics.jsx` | De fem nøgletal og udregningen bag dem. |
+| `src/components/Timeline.jsx` | Tidslinjen som håndtegnet SVG, med baner pr. ejer. |
+| `src/components/WaitDistribution.jsx` | Ventetid efter ejer og årsag, de største forsinkelser, modtræk og potentiale. |
+| `src/components/FirstNinetyDays.jsx` | De tre handlinger de første 90 dage, koblet til ventedagene i forløbet. |
+| `src/components/Readiness.jsx` | De fem spørgsmål om kunden, det realistiske skøn og modtrækkene. |
+| `src/components/AdoptionGap.jsx` | Fra adgang til gennemført kursus. |
+| `src/components/OpenQuestions.jsx` | Det, jeg ikke ved endnu. |
 
-No backend, no database, no login. Everything is calculated in the browser. No third-party
-libraries for graphics — the SVG is drawn by hand.
+Ingen backend, ingen database, intet login. Alt regnes i browseren, og intet forlader den. Ingen
+tredjepartsbiblioteker til grafik: SVG'en er tegnet i hånden.
 
-## The calculations
+## Beregningerne
 
-A working day counts as 7.4 hours (`HOURS_PER_DAY` in `src/model.js`).
+En arbejdsdag regnes som 7,4 timer (`HOURS_PER_DAY` i `src/model.js`).
 
 ```
-totalProcessDays   = sum(processHours) / 7.4
+totalProcessDays   = sum(processHours) / 7,4
 totalWaitDays      = sum(waitDaysBefore)
 totalLeadTimeDays  = totalWaitDays + totalProcessDays
 flowEfficiency     = totalProcessDays / totalLeadTimeDays * 100
-ttvDays            = sum(waitDaysBefore + processHours/7.4) up to the step with isValueMoment
-handoffs           = times owner changes between two consecutive steps
-waitByOwner        = waiting before a step is attributed to whoever carries that step out
-classifiedWaitDays = waiting where waitCause is set
-humanWaitDays      = sum(waitDaysBefore where waitCause is set and is not "technical")
+ttvDays            = sum(waitDaysBefore + processHours/7,4) til og med trinnet med isValueMoment
+handoffs           = antal gange owner skifter mellem to trin i træk
+waitByOwner        = ventetid før et trin tilskrives den, der skal udføre trinnet
+classifiedWaitDays = ventetid, hvor waitCause er sat
+humanWaitDays      = sum(waitDaysBefore, hvor waitCause er sat og ikke er "technical")
 humanWaitShare     = humanWaitDays / classifiedWaitDays * 100
 ```
 
-### Cause rather than owner
+### Årsag frem for ejer
 
-Every step carries both an `owner` and a `waitCause`. Ownership tells you who is holding the ball.
-The cause tells you why it is sitting still — and it is the cause that decides what can be done
-about it. The five causes (`calendar`, `decision`, `delivery`, `priority`, `technical`) each carry a
-countermeasure and a saving range in `WAIT_CAUSES`.
+Hvert trin har både en `owner` og en `waitCause`. Ejerskab fortæller, hvem der holder bolden.
+Årsagen fortæller, hvorfor den ligger stille, og det er årsagen, der afgør, hvad man kan gøre ved
+det. De fem årsager (`calendar`, `decision`, `delivery`, `priority`, `technical`) vises som
+kalender, beslutning, leverance, prioritering og teknisk, og hver har et modtræk og et
+besparelsesinterval i `WAIT_CAUSES`. Fire af de fem er menneskelige. Det giver nøgletallet
+**menneskelig ventetid**.
 
-Four of the five are human. That gives the **human wait time** figure, which is the sharpest point
-the tool makes: you cannot automate your way out of a flow where nearly all the waiting comes down
-to calendars, decisions and priorities.
+**Uoplyst er en egen tilstand.** `waitCause: null` betyder, at brugeren ikke har svaret, og det
+falder aldrig tilbage på en standardværdi. Uoplyst ventetid tælles hverken som menneskelig eller
+teknisk, den vises som et stribet felt i bjælken, den holdes uden for potentialeberegningen, og en
+forsinkelse uden årsag får en opfordring i stedet for et lånt modtræk. Værktøjet gætter ikke på
+brugerens vegne.
 
-**Unspecified is a state of its own.** `waitCause: null` means the user has not answered, and it
-never falls back to a default. That is essential to the credibility: if it did, every step would
-count as the chosen default, the human share would always read 100%, and every countermeasure would
-be the same one. Unspecified waiting is therefore counted as neither human nor technical, it is
-shown as a hatched field in the bar, it is held out of the potential calculation, and a delay with
-no cause gets a prompt instead of a borrowed countermeasure. The tool does not guess on the user's
-behalf.
+### Afrundingsreglen
 
-### The rounding rule
+Beregnede tal må have én decimal. Skøn må ikke: de vises som hele dage eller som et interval. `fmt`
+er til beregnede tal, `fmtEstimate` og `fmtEstimateRange` til skøn. Et skøn, der ser præcist ud,
+lover mere, end det kan holde.
 
-Calculated figures may carry one decimal. Estimates may not — they are shown as whole days or as a
-range. `fmt` is for calculated figures, `fmtEstimate` and `fmtEstimateRange` for estimates. An
-estimate that looks precise promises more than it can keep.
+### Skøn
 
-### Estimates
+- **Potentialet** (`computeImprovement`) tager de tre største forsinkelser og anvender
+  besparelsesintervallet for hver årsag. Resultatet er et interval, ikke et tal.
+- **Kundens udgangspunkt** lægger en multiplikator (0,8 til 2,0 ud fra en score på 0-10) på
+  **kun** kundens ventetid. Kundens medarbejderliste eller arbejdstilrettelæggelse påvirker ikke,
+  hvor hurtigt VideoVicers eget team arbejder. Hvert svar, der trækker ned, giver et modtræk.
+- **Fra adgang til gennemført kursus** er brugerens eget skøn over, hvor mange dage der går fra det
+  første hold er færdigt, til hovedparten af kundens medarbejdere er det. Det lægges oven i
+  time-to-value og tegnes som en stiplet zone på tidslinjen fra det første certifikat.
+- **De første 90 dage** (`FirstNinetyDays`) er tre handlinger, jeg selv har skrevet. Ventedagene ved
+  siden af dem er ikke skrevet ind: de slås op på årsag (`waitByCauses`) i det forløb, der står på
+  siden, så de følger med, hvis forløbet rettes.
 
-- **The potential** (`computeImprovement`) takes the three biggest delays and applies the saving
-  range for each cause. The result is a range, not a single figure.
-- **Readiness** applies a multiplier (0.8 to 2.0 from a score of 0-10) to **only** customer-side
-  waiting. The customer's data quality does not affect how fast your own team works. Each answer
-  that scores badly produces a concrete countermeasure.
-- **The adoption gap** is the user's own estimate of how long it takes from go-live until the
-  solution is used day to day. It is added to time-to-value and drawn as a dashed zone on the
-  timeline.
+### Værdiøjeblikket
 
-The preloaded example gives 22.5 days of lead time, 26 hours of work, 15.6% flow efficiency, four
-handoffs, 13.7 days of time-to-value and 89.5% human wait time (2 of 19 waiting days are technical).
-Handle the three biggest delays and the flow lands at roughly 13-16 days, with the recommendation
-pointing at the calendar waiting first.
+Stjernen står ved trin 7, første hold gennemfører kursus og quiz, og ikke ved opsætningen. For
+VideoVicer er værdien ikke, at platformen er sat op, men at de første medarbejdere har gennemført et
+kursus og fået et certifikat.
 
-## Sharing and persistence
+## Eksemplets tal
 
-- **localStorage** keeps the work, so a refresh costs nothing. If it is switched off, the tool
-  carries on without it.
-- **Sharing** encodes the whole flow into the URL hash as base64. Nothing leaves the browser. As
-  soon as the user changes anything after sharing, the hash is removed again — the address must not
-  describe a state that no longer holds.
-- **Older links and saved work** still load. Links from version 1 carry no wait causes and no
-  adoption figure; the cause stays **unspecified** rather than being guessed. Links from the Danish
-  release carry Danish keys, which are translated on the way in (`src/persist.js`), so those links
-  keep working. A stored copy of the Danish demo that was never edited is replaced with the English
-  example, so nobody meets an English page with Danish step names.
+Eksemplet er mit bud på forløbet fra underskrift til første certifikat. Det giver:
 
-## Deploy
+| Nøgletal | Værdi |
+| --- | --- |
+| Gennemløbstid | 27,8 dage |
+| Arbejdstid | 21 timer (2,8 dage) |
+| Ventetid | 25 dage |
+| Flow-effektivitet | 10,2 % |
+| Time-to-value (første certifikat) | 22,6 dage |
+| Overleveringer | 6 |
+| Menneskelig ventetid | 92,0 % (23 af 25 ventedage; 2 er teknisk) |
+
+De tre største forsinkelser er trin 7 (7 dage, prioritering, 25 % af forløbet), trin 8 (5 dage,
+kalender, 18 %) og trin 2 (4 dage, leverance, 14 %). Håndteres de tre, lander forløbet på cirka
+**19-22 dage** frem for 27,8, og flow-effektiviteten stiger til cirka **13-15 %**. Med kundens
+udgangspunkt stillet på midten af alle fem spørgsmål er det realistiske skøn **30-37 dage**.
+
+## Deling og lagring
+
+- **localStorage** gemmer arbejdet, så en genindlæsning ikke koster noget. Er det slået fra, kører
+  siden videre uden.
+- **Lagernøglen er unik** (`videovicer-onboarding-analyse/v1`). GitHub Pages serverer alle en kontos
+  projekter fra samme origin og dermed samme localStorage, så en fælles nøgle ville lade to sider
+  læse og overskrive hinandens gemte arbejde.
+- **Deling** koder hele forløbet ind i URL'ens hash som base64. Intet forlader browseren. Så snart
+  man retter noget efter at have delt, fjernes hashen igen: adressen må ikke beskrive en tilstand,
+  der ikke længere gælder.
+- Alt i et link eller i lageret, som siden ikke genkender, sættes tilbage til en sikker værdi frem
+  for at blive stolet på: en ukendt ejer bliver VideoVicer, en ukendt årsag forbliver uoplyst, og
+  svar, der ikke passer til spørgsmålene, falder tilbage på midten.
+
+## Udgivelse
 
 ```bash
 npm run deploy
 ```
 
-Builds and pushes `dist/` to the `gh-pages` branch.
+Bygger og skubber `dist/` til `gh-pages`-grenen.
 
-## Deliberate omissions
+## Bevidste fravalg
 
-No user accounts, no template library, no AI integration, no comparison of several flows and no cost
-calculation. One thing, finished.
+Ingen brugerkonti, ingen skabeloner, ingen AI-integration, ingen sammenligning af flere forløb og
+ingen omkostningsberegning. Intet VideoVicer-logo: siden skal ligne min analyse af dem, ikke deres
+produkt. PDF-eksport går gennem browserens egen udskrivning (`window.print()` og et
+print-stylesheet) frem for et tredjepartsbibliotek.
 
-PDF export goes through the browser's own printing (`window.print()` plus a print stylesheet) rather
-than a third-party DOM-to-image library.
-
-Built by Omar Slaiman.
+Lavet af Omar Slaiman · omar.slaiman7@gmail.com · +45 50 62 09 49

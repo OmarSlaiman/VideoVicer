@@ -9,24 +9,19 @@ import {
   computeAdoption,
   newId,
 } from './model.js'
-import {
-  encodeStateToHash,
-  readStateFromHash,
-  saveLocal,
-  readLocal,
-  isUntouchedDanishExample,
-} from './persist.js'
+import { encodeStateToHash, readStateFromHash, saveLocal, readLocal } from './persist.js'
 import { downloadPng, downloadSvg } from './exportImage.js'
 import StepList from './components/StepList.jsx'
 import Metrics from './components/Metrics.jsx'
 import Timeline from './components/Timeline.jsx'
 import WaitDistribution from './components/WaitDistribution.jsx'
+import FirstNinetyDays from './components/FirstNinetyDays.jsx'
 import Readiness from './components/Readiness.jsx'
 import AdoptionGap from './components/AdoptionGap.jsx'
+import OpenQuestions from './components/OpenQuestions.jsx'
 
 const freshExample = () => EXAMPLE_STEPS.map((s) => ({ ...s }))
 
-// A shared link first, then saved work, otherwise the example. The user never meets an empty form.
 function restored(loaded, source) {
   return {
     steps: loaded.steps,
@@ -43,16 +38,13 @@ const fresh = () => ({
   source: 'example',
 })
 
+// A shared link first, then saved work, otherwise the example. The user never meets
+// an empty form.
 function initialState() {
   const shared = readStateFromHash()
   if (shared && shared.steps.length) return restored(shared, 'link')
   const stored = readLocal()
-  // The tool shipped in Danish first. Saved work is the user's own and is kept,
-  // but a stored copy of the old demo that was never edited would show Danish
-  // step names on an English page, so that one is replaced.
-  if (stored && stored.steps.length && !isUntouchedDanishExample(stored.steps)) {
-    return restored(stored, 'saved')
-  }
+  if (stored && stored.steps.length) return restored(stored, 'saved')
   return fresh()
 }
 
@@ -76,7 +68,7 @@ export default function App() {
       clearHash()
       setState((prev) => ({
         ...prev,
-        source: 'egen',
+        source: 'own',
         steps: typeof updater === 'function' ? updater(prev.steps) : updater,
       }))
     },
@@ -173,48 +165,54 @@ export default function App() {
   const reset = useCallback(() => {
     setState(fresh())
     if (window.location.hash) history.replaceState(null, '', window.location.pathname + window.location.search)
-    say('The example is back.')
+    say('Eksemplet er hentet tilbage.')
   }, [say])
 
   const share = useCallback(async () => {
     const hash = encodeStateToHash({ steps, readiness, adoptionDays })
-    if (!hash) return say('The link could not be created.')
+    if (!hash) return say('Linket kunne ikke laves.')
     const url = window.location.origin + window.location.pathname + window.location.search + hash
     history.replaceState(null, '', hash)
     try {
       await navigator.clipboard.writeText(url)
-      say('Link copied. The whole flow is in the address.')
+      say('Linket er kopieret. Hele forløbet ligger i adressen.')
     } catch {
-      say('The link is now in the address bar and can be copied from there.')
+      say('Linket står nu i adresselinjen og kan kopieres derfra.')
     }
   }, [steps, readiness, adoptionDays, say])
 
   const exportSvg = useCallback(() => {
-    say(downloadSvg(svgRef.current) ? 'Timeline downloaded as SVG.' : 'There is no timeline to download.')
+    say(downloadSvg(svgRef.current) ? 'Tidslinjen er hentet som SVG.' : 'Der er ingen tidslinje at hente.')
   }, [say])
 
   const exportPng = useCallback(async () => {
     const ok = await downloadPng(svgRef.current)
-    say(ok ? 'Timeline downloaded as PNG.' : 'The PNG could not be created. Try SVG instead.')
+    say(ok ? 'Tidslinjen er hentet som PNG.' : 'PNG kunne ikke laves. Prøv SVG i stedet.')
   }, [say])
 
   return (
     <>
       <header className="masthead">
         <div className="masthead-inner">
-          <h1>Onboarding Flow Analyser</h1>
-          <p className="lede">Map an onboarding flow, and see where the time actually goes.</p>
+          <h1>Kundeonboarding hos VideoVicer</h1>
+          <p className="lede">Hvor går tiden fra underskrift til første certifikat?</p>
           <p className="byline">
-            A small tool for making time-to-value concrete. Built by Omar Slaiman.
+            Et analyseudkast lavet af Omar Slaiman i forbindelse med min ansøgning som Customer
+            Success Manager. Forløbet bygger på offentlig information og mine egne antagelser, så
+            ret mig endelig.
           </p>
         </div>
       </header>
 
       <main className="page">
+        <p className="hint intro-hint">
+          Tallene er mine gæt. Ret trinene til jeres virkelige forløb, så regner værktøjet igen.
+        </p>
+
         {source === 'link' ? (
-          <p className="hint" style={{ marginTop: 20 }}>
-            This flow was loaded from a shared link. Edit it freely — the changes only reach your
-            own browser.
+          <p className="hint">
+            Dette forløb er indlæst fra et delt link. Ret frit i det — ændringerne rammer kun din
+            egen browser.
           </p>
         ) : null}
 
@@ -250,6 +248,10 @@ export default function App() {
         </div>
 
         <div className="section">
+          <FirstNinetyDays steps={steps} metrics={metrics} />
+        </div>
+
+        <div className="section">
           <Readiness
             readiness={readiness}
             onChange={setReadiness}
@@ -271,40 +273,42 @@ export default function App() {
 
         <div className="toolbar" style={{ marginTop: 20 }}>
           <button type="button" className="btn" onClick={share}>
-            Copy link to this flow
+            Kopiér link til dette forløb
           </button>
           <button type="button" className="btn" onClick={exportSvg}>
-            Download timeline as SVG
+            Hent tidslinjen som SVG
           </button>
           <button type="button" className="btn" onClick={exportPng}>
-            Download as PNG
+            Hent som PNG
           </button>
           <button type="button" className="btn" onClick={() => window.print()}>
-            Print or save as PDF
+            Print eller gem som PDF
           </button>
           <span className="status-msg" role="status" aria-live="polite">
             {status}
           </span>
         </div>
 
+        <div className="section">
+          <OpenQuestions />
+        </div>
+
         <footer className="footer">
-          <h2>About this tool</h2>
+          <h2>Hvorfor jeg har lavet det</h2>
           <p>
-            An onboarding flow is a process like any other: it has handoffs, waiting and places
-            where things go wrong. And time-to-value, the figure subscription businesses measure, is
-            the same thing as lead time, just said in a different vocabulary.
+            Et onboardingforløb er en proces som alle andre. Det har overleveringer, ventetid og
+            steder, hvor tingene går i stå. Og time-to-value er bare gennemløbstid sagt med et
+            andet ord. Jeg har lavet siden for at vise, hvordan jeg ville gå til jeres kunders
+            forløb: ikke ved at spørge, hvem der er langsom, men hvor arbejdet ligger stille.
+            Tallene er kun så gode som de antagelser, der er tastet ind, og intet forlader din
+            browser.
           </p>
           <p>
-            The tool calculates nothing you could not work out by hand. The point is to make it
-            visible where the time actually goes, so the conversation moves from “who is slow” to
-            “where is the work sitting still”.
+            Lavet af Omar Slaiman
+            <br />
+            <a href="mailto:omar.slaiman7@gmail.com">omar.slaiman7@gmail.com</a> ·{' '}
+            <a href="tel:+4550620949">+45 50 62 09 49</a>
           </p>
-          <p>
-            The figures are only as good as the estimates typed in. The readiness part is a rule of
-            thumb, not a model. Nothing leaves your browser: everything is calculated locally, and a
-            shared link contains only what you entered yourself.
-          </p>
-          <p>Built by Omar Slaiman</p>
         </footer>
       </main>
     </>

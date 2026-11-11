@@ -4,17 +4,17 @@
 export const HOURS_PER_DAY = 7.4 // a standard full working day
 
 export const OWNERS = [
-  { key: 'us', label: 'Us', short: 'Us' },
-  { key: 'customer', label: 'Customer', short: 'Customer' },
-  { key: 'thirdParty', label: 'Third party', short: '3rd party' },
+  { key: 'us', label: 'VideoVicer', short: 'VideoVicer' },
+  { key: 'customer', label: 'Kunden', short: 'Kunden' },
+  { key: 'thirdParty', label: 'Tredjepart', short: '3. part' },
 ]
 
 export const OWNER_KEYS = OWNERS.map((o) => o.key)
 
 export const OWNER_LABEL = {
-  us: 'Us',
-  customer: 'Customer',
-  thirdParty: 'Third party',
+  us: 'VideoVicer',
+  customer: 'Kunden',
+  thirdParty: 'Tredjepart',
 }
 
 // Ownership tells you who is holding the ball. The cause tells you why it is
@@ -22,59 +22,64 @@ export const OWNER_LABEL = {
 export const WAIT_CAUSES = [
   {
     key: 'calendar',
-    label: 'Calendar',
+    label: 'Kalender',
+    waitName: 'kalenderventetiden',
     human: true,
-    meaning: 'Waiting for a slot in the calendar: a meeting, a workshop, a training session',
+    meaning: 'Venter på at få en tid i kalenderen: et møde, en opfølgning, en kursusdag',
     countermeasure:
-      'Book every meeting in the flow at kickoff, not as you go. Calendar wait happens because the time is found too late, not because people are busy.',
+      'Book alle møder i forløbet ved kickoff, ikke undervejs. Kalenderventetid opstår, fordi tiden findes for sent, ikke fordi folk er optaget.',
     saving: [40, 60],
     effortNote:
-      'it needs no new systems, only that the meetings are booked at kickoff instead of along the way',
+      'den kræver ingen nye systemer, kun at møderne bookes ved kickoff i stedet for undervejs',
     color: '#1F3864',
   },
   {
     key: 'decision',
-    label: 'Decision',
+    label: 'Beslutning',
+    waitName: 'beslutningsventetiden',
     human: true,
-    meaning: 'Waiting for an approval or a choice',
+    meaning: 'Venter på en godkendelse eller et valg',
     countermeasure:
-      'Establish who holds the mandate before the flow starts, and get that person in the room. Failing that, agree up front what can be decided without them.',
+      'Afklar hvem der har mandatet, før forløbet starter, og få vedkommende med i lokalet. Alternativt: aftal på forhånd, hvad der kan besluttes uden dem.',
     saving: [40, 60],
-    effortNote: 'it takes one conversation about mandate before the flow begins',
+    effortNote: 'den kræver én samtale om mandat, før forløbet går i gang',
     color: '#3C5488',
   },
   {
     key: 'delivery',
-    label: 'Delivery',
+    label: 'Leverance',
+    waitName: 'leveranceventetiden',
     human: true,
-    meaning: 'Waiting for someone to produce something: data, documents, access',
+    meaning: 'Venter på, at nogen producerer noget: en liste, et dokument, en adgang',
     countermeasure:
-      'Do not ask for the material. Book a working session and produce it together. Send a template and an example beforehand.',
+      'Bed ikke om materialet. Send en skabelon og et eksempel på forhånd, og lav det helst sammen i en fælles arbejdssession.',
     saving: [50, 70],
-    effortNote: 'it costs one shared working session instead of a string of reminders',
+    effortNote: 'den koster én skabelon og én fælles arbejdssession i stedet for en række rykkere',
     color: '#6E85B5',
   },
   {
     key: 'priority',
-    label: 'Priority',
+    label: 'Prioritering',
+    waitName: 'prioriteringsventetiden',
     human: true,
-    meaning: 'The task sits still because it is not important enough right now',
+    meaning: 'Opgaven ligger stille, fordi den ikke er vigtig nok lige nu',
     countermeasure:
-      'Create a visible result early, and find someone at the customer with something at stake in it succeeding. Low priority is rarely reluctance; it is the absence of consequence.',
+      'Skab et synligt resultat tidligt, og find en person hos kunden, der har noget på spil i, at det lykkes. Lav prioritering er sjældent modvilje, det er fravær af konsekvens.',
     saving: [30, 50],
     effortNote:
-      'it requires someone at the customer to have something at stake — not that your team works faster',
+      'den kræver, at nogen hos kunden har noget på spil — ikke at I arbejder hurtigere',
     color: '#A9B6D1',
   },
   {
     key: 'technical',
-    label: 'Technical',
+    label: 'Teknisk',
+    waitName: 'den tekniske ventetid',
     human: false,
-    meaning: 'The system is running, an integration is syncing, a third party is answering by machine',
+    meaning: 'Systemet kører: platformen sættes op, eller invitationer sendes og synkroniseres maskinelt',
     countermeasure:
-      'Check whether the step can run alongside other work instead of blocking it. Otherwise this is where automation genuinely helps.',
+      'Undersøg, om trinnet kan køre parallelt med andet arbejde i stedet for at blokere. Ellers er det her, automatisering faktisk giver mening.',
     saving: [20, 50],
-    effortNote: 'it is the only one of the five where automation is actually the answer',
+    effortNote: 'den er den eneste af de fem, hvor automatisering faktisk er svaret',
     color: '#C9CFDB',
   },
 ]
@@ -86,9 +91,9 @@ export const CAUSE_BY_KEY = Object.fromEntries(WAIT_CAUSES.map((c) => [c.key, c]
 // would always read 100 %.
 export const UNSPECIFIED = {
   key: null,
-  label: 'Unspecified',
+  label: 'Uoplyst',
   human: null,
-  meaning: 'The wait is recorded, but no cause has been set',
+  meaning: 'Ventetiden er registreret, men årsagen er ikke sat',
   color: '#EDEFF4',
 }
 
@@ -98,90 +103,97 @@ export const causeOrUnspecified = (key) => CAUSE_BY_KEY[key] ?? UNSPECIFIED
 let idCounter = 0
 export const newId = () => `s${Date.now().toString(36)}${(idCounter++).toString(36)}`
 
-// The preloaded example: an AI-driven reconciliation product for accounting.
+// The preloaded example: my own assumptions about how a VideoVicer onboarding runs,
+// from signature to the first certificate. Built from public information only.
 export const EXAMPLE_STEPS = [
-  { id: 'ex1', name: 'Kickoff meeting and expectation setting', owner: 'us', processHours: 2, waitDaysBefore: 0, waitCause: 'calendar', isValueMoment: false },
-  { id: 'ex2', name: 'Customer supplies chart of accounts and system access', owner: 'customer', processHours: 3, waitDaysBefore: 5, waitCause: 'delivery', isValueMoment: false },
-  { id: 'ex3', name: 'Integration setup', owner: 'us', processHours: 6, waitDaysBefore: 1, waitCause: 'technical', isValueMoment: false },
-  { id: 'ex4', name: 'Data validation and troubleshooting', owner: 'us', processHours: 4, waitDaysBefore: 0, waitCause: 'delivery', isValueMoment: false },
-  { id: 'ex5', name: 'Customer approves the account mapping', owner: 'customer', processHours: 2, waitDaysBefore: 4, waitCause: 'decision', isValueMoment: false },
-  { id: 'ex6', name: 'First automated reconciliation runs', owner: 'us', processHours: 3, waitDaysBefore: 1, waitCause: 'technical', isValueMoment: true },
-  { id: 'ex7', name: 'Training the customer team', owner: 'us', processHours: 4, waitDaysBefore: 6, waitCause: 'calendar', isValueMoment: false },
-  { id: 'ex8', name: 'Go-live and handover to operations', owner: 'us', processHours: 2, waitDaysBefore: 2, waitCause: 'calendar', isValueMoment: false },
+  { id: 'ex1', name: 'Kickoff og forventningsafstemning', owner: 'us', processHours: 2, waitDaysBefore: 0, waitCause: 'calendar', isValueMoment: false },
+  { id: 'ex2', name: 'Kunden leverer medarbejderliste og afdelinger', owner: 'customer', processHours: 2, waitDaysBefore: 4, waitCause: 'delivery', isValueMoment: false },
+  { id: 'ex3', name: 'Opsætning af platform, brugere og kurser', owner: 'us', processHours: 6, waitDaysBefore: 1, waitCause: 'technical', isValueMoment: false },
+  { id: 'ex4', name: 'Valg af kurser og evt. kundespecifik video', owner: 'customer', processHours: 3, waitDaysBefore: 3, waitCause: 'decision', isValueMoment: false },
+  { id: 'ex5', name: 'Kunden godkender indholdet', owner: 'customer', processHours: 1, waitDaysBefore: 4, waitCause: 'decision', isValueMoment: false },
+  { id: 'ex6', name: 'Invitationer sendes til medarbejderne', owner: 'us', processHours: 1, waitDaysBefore: 1, waitCause: 'technical', isValueMoment: false },
+  { id: 'ex7', name: 'Første hold gennemfører kursus og quiz', owner: 'customer', processHours: 4, waitDaysBefore: 7, waitCause: 'priority', isValueMoment: true },
+  { id: 'ex8', name: 'Opfølgning på gennemførsel', owner: 'us', processHours: 2, waitDaysBefore: 5, waitCause: 'calendar', isValueMoment: false },
 ]
 
 export const READINESS_QUESTIONS = [
   {
-    key: 'dataQuality',
-    label: 'What shape is the customer data in?',
-    help: 'Messy data is the single most common reason an onboarding flow slips.',
-    options: ['Clean and structured', 'Mixed', 'Messy'],
+    key: 'employeeList',
+    label: 'Er medarbejderlisten klar?',
+    help: 'En ufuldstændig liste er den hyppigste grund til, at invitationerne bliver forsinket.',
+    options: ['Klar og opdateret', 'Delvist', 'Skal laves fra bunden'],
     countermeasures: [
       null,
-      'Ask for an extract of the most-used accounts before setup, and review it together. Mixed data quality rarely shows up until it costs time in validation.',
-      'Set aside a separate step for data cleaning before setup, and do it with the customer. Otherwise messy data surfaces during validation, where it costs twice.',
+      'Send en skabelon før kickoff, så listen kan fyldes ud inden første møde.',
+      'Lav listen sammen med kunden på kickoff-mødet i stedet for at vente på den bagefter.',
     ],
   },
   {
     key: 'champion',
-    label: 'Is there a champion at the customer?',
-    help: 'Someone who wants the project finished, and who others listen to.',
-    options: ['Yes, a clear champion', 'Unclear', 'No one'],
+    label: 'Er der en navngiven ansvarlig hos kunden?',
+    help: 'En person, der kender medarbejderne og kan få dem i gang.',
+    options: ['Ja, fx formand eller arbejdsmiljørepræsentant', 'Uklart', 'Ingen'],
     countermeasures: [
       null,
-      'Get a name on the responsible person at kickoff. If it is unclear who it is, there usually is not one.',
-      'Ask for a named owner at the customer at kickoff, not a department. Without a person with a name, the flow belongs to everyone and therefore to no one.',
+      'Få et navn på den ansvarlige ved kickoff. Er det uklart, hvem det er, er der som regel ingen.',
+      'Bed om en navngiven person, ikke en afdeling. Uden et navn tilhører forløbet alle og dermed ingen.',
     ],
   },
   {
-    key: 'decisionAuthority',
-    label: 'How close is the decision-maker?',
-    help: 'Distance to decisions turns into wait time, not into fewer decisions.',
-    options: ['In the room', 'Partly involved', 'Far away'],
+    key: 'workTime',
+    label: 'Er der afsat tid i arbejdstiden?',
+    help: 'Kurser, der skal klemmes ind ved siden af arbejdet, bliver ikke gennemført.',
+    options: ['Ja, fast tid', 'Ad hoc', 'Nej, det skal ske i fritiden'],
     countermeasures: [
       null,
-      'Agree at kickoff which decisions can be made in the room and which have to go further. At least then the wait becomes predictable.',
-      'Establish up front which decisions can be made without the top, and which cannot. Otherwise every approval turns into a queue.',
+      'Foreslå et fast tidspunkt, fx de første 15 minutter af et morgenmøde.',
+      'Aftal med den ansvarlige, at det første kursus gennemføres samlet i arbejdstiden, så der skabes en vane.',
     ],
   },
   {
-    key: 'systemExperience',
-    label: 'Has the customer done something like this before?',
-    help: 'Experience with similar systems shortens both training and approvals.',
-    options: ['Used to similar', 'A little experience', 'Entirely new to them'],
+    key: 'deadline',
+    label: 'Er der en deadline, der skaber et naturligt pres?',
+    help: 'Uden en konsekvens glider kurserne ned ad prioriteringslisten.',
+    options: ['Ja, fx lovkrav eller certificering', 'En intern målsætning', 'Ingen deadline'],
     countermeasures: [
       null,
-      'Schedule a short follow-up a couple of weeks after the training. That is when the questions arrive, not during the session itself.',
-      'Plan for more training than you think, and place it earlier. Inexperienced users do not ask questions; they postpone using the product.',
+      'Gør den interne målsætning synlig for medarbejderne, fx med en dato for, hvornår første hold skal være færdigt.',
+      'Find en konkret anledning sammen med kunden, fx en ny byggeplads, en sæsonstart eller et tilsyn.',
     ],
   },
   {
-    key: 'changeAppetite',
-    label: 'How much appetite is there for change?',
-    help: 'Low appetite for change rarely shows up as resistance. It shows up as postponed meetings.',
-    options: ['High', 'Medium', 'Low'],
+    key: 'access',
+    label: 'Kan alle medarbejdere tilgå indholdet?',
+    help: 'Medarbejdere uden fast computer skal kunne komme i gang fra telefonen på få minutter.',
+    options: ['Ja, alle har adgang via telefon', 'De fleste', 'Mange har ikke nem adgang'],
     countermeasures: [
       null,
-      'Pick the first use case where the gain is clearest to the people who have to use it. Medium appetite tips on visible results.',
-      'Find the one place where the new thing solves a problem they actually feel, and start there. Low appetite for change shows up as postponed meetings, not as resistance.',
+      'Kortlæg, hvem der mangler adgang, før invitationerne sendes.',
+      'Planlæg en fælles gennemførsel på stedet, hvor den ansvarlige viser, hvordan man kommer i gang.',
     ],
   },
 ]
 
-export const DEFAULT_READINESS = {
-  dataQuality: 1,
-  champion: 1,
-  decisionAuthority: 1,
-  systemExperience: 1,
-  changeAppetite: 1,
+// Every question starts in the middle. The user moves them to fit the customer.
+export const DEFAULT_READINESS = Object.fromEntries(READINESS_QUESTIONS.map((q) => [q.key, 1]))
+
+// Anything that is not a 0, 1 or 2 falls back to the middle answer. Keeps a link
+// built with other questions from producing a score outside the 0-10 range.
+export function cleanReadiness(raw) {
+  const out = {}
+  for (const q of READINESS_QUESTIONS) {
+    const v = Number(raw?.[q.key])
+    out[q.key] = v === 0 || v === 1 || v === 2 ? v : DEFAULT_READINESS[q.key]
+  }
+  return out
 }
 
 export const MULTIPLIER_BANDS = [
-  { max: 1, multiplier: 0.8, label: 'Better than planned' },
-  { max: 3, multiplier: 1.0, label: 'As planned' },
-  { max: 5, multiplier: 1.3, label: 'Somewhat longer' },
-  { max: 7, multiplier: 1.6, label: 'Substantially longer' },
-  { max: 10, multiplier: 2.0, label: 'Markedly longer' },
+  { max: 1, multiplier: 0.8, label: 'Bedre end planlagt' },
+  { max: 3, multiplier: 1.0, label: 'Som planlagt' },
+  { max: 5, multiplier: 1.3, label: 'Noget længere' },
+  { max: 7, multiplier: 1.6, label: 'Væsentligt længere' },
+  { max: 10, multiplier: 2.0, label: 'Markant længere' },
 ]
 
 export function bandFor(score) {
@@ -351,13 +363,29 @@ export function computeStartHere(metrics) {
     .sort((a, b) => b.expectedSaving - a.expectedSaving || b.days - a.days)
 
   if (!ranked.length) return null
-  const [first, second] = ranked
+  const [first, ...rest] = ranked
+  const mostOtherDays = rest.reduce((max, r) => Math.max(max, r.days), 0)
   return {
     ...first,
-    // Without a runner-up to measure against, "more than any other" means nothing.
-    clearlyLargest: !second || first.expectedSaving > second.expectedSaving + 1e-9,
+    // "More days than any other cause" is only true if no other cause matches it.
+    // The ranking is by expected saving, so the two can differ - and two causes
+    // can tie on days.
+    hasMostDays: rest.length > 0 && first.days > mostOtherDays,
     causeCount: ranked.length,
   }
+}
+
+// The days of waiting a countermeasure would attack, found by cause rather than by
+// step number, so the figures follow the flow if the user edits it.
+export function waitByCauses(steps, causeKeys) {
+  const rows = []
+  steps.forEach((s, index) => {
+    const days = num(s.waitDaysBefore)
+    if (days > 0 && causeKeys.includes(s.waitCause)) {
+      rows.push({ index, name: s.name, cause: s.waitCause, days })
+    }
+  })
+  return { rows, totalDays: rows.reduce((sum, r) => sum + r.days, 0) }
 }
 
 export function computeAdoption(metrics, adoptionDays) {

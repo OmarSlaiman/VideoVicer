@@ -428,7 +428,8 @@ section { scroll-margin-top: 20px; }
   .toolbar,
   .step-actions,
   .card-head .btn,
-  .hint { display: none; }
+  .hint:not(.intro-hint) { display: none; }
+  .plan-item { break-inside: avoid; }
   .results-col { position: static; }
   body { background: #fff; }
   .card { box-shadow: none; break-inside: avoid; }
@@ -561,3 +562,81 @@ section { scroll-margin-top: 20px; }
   max-width: 70ch;
 }
 .start-here b { color: var(--navy); }
+
+/* ---------- VideoVicer: additions ---------- */
+.pill {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 9px;
+  border: 1px solid var(--blue);
+  border-radius: 999px;
+  color: var(--navy);
+  background: #EEF1F8;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  vertical-align: 2px;
+}
+
+.intro-hint {
+  margin-top: 24px;
+  padding: 14px 18px;
+  font-size: 15.5px;
+  color: var(--text);
+  background: var(--surface);
+  border-left-width: 3px;
+  border-left-color: var(--navy);
+}
+
+.plan-list { list-style: none; margin: 0; padding: 0; }
+.plan-item {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 4px 14px;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+}
+.plan-item:first-child { border-top: 0; padding-top: 4px; }
+.plan-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.plan-body { min-width: 0; }
+.plan-title { font-size: 15px; font-weight: 600; max-width: 68ch; }
+.plan-meta { margin-top: 6px; font-size: 13px; color: var(--muted); max-width: 68ch; }
+.plan-meta b { color: var(--navy); }
+.plan-steps {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  max-width: 68ch;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--blue);
+  border-radius: 4px;
+}
+.plan-steps li { display: flex; justify-content: space-between; gap: 14px; padding: 7px 11px; font-size: 13px; }
+.plan-steps li + li { border-top: 1px solid var(--border); }
+.plan-days { white-space: nowrap; font-weight: 600; color: var(--navy); font-variant-numeric: tabular-nums; }
+
+.question-list { margin: 0; padding: 0; list-style: none; }
+.question-list li {
+  position: relative;
+  padding: 11px 0 11px 24px;
+  border-top: 1px solid var(--border);
+  font-size: 15px;
+}
+.question-list li:first-child { border-top: 0; padding-top: 2px; }
+.question-list li::before { content: "?"; position: absolute; left: 2px; top: 11px; color: var(--blue); font-weight: 700; }
+.question-list li:first-child::before { top: 2px; }
+
+/* There is no hover on a touch screen, so the hint would be wrong there. */
+@media (hover: none) { .hover-hint { display: none; } }
